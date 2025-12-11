@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
-<title>呼吸器模式速查 (PT Edition)</title>
+<title>呼吸器模式速查 (PT Pro)</title>
 <style>
 :root{
   --bg: #f8fafc; 
@@ -12,22 +12,28 @@
   --text-light: #64748b;
   --border: #e2e8f0;
   
-  /* Severity Colors */
-  --sev-critical: #ef4444; /* CMV */
-  --sev-severe: #f97316;   /* A/C */
-  --sev-mod: #eab308;      /* SIMV */
-  --sev-mild: #22c55e;     /* CPAP */
+  /* Severity Colors (Standard) */
+  --sev-critical: #ef4444; 
+  --sev-severe: #f97316;   
+  --sev-mod: #eab308;      
+  --sev-mild: #22c55e;     
+
+  /* Special Mode Colors */
+  --spec-smart: #8b5cf6; /* Purple for Smart Modes */
+  --spec-rescue: #475569; /* Dark Slate for Rescue */
+  --spec-niv: #06b6d4;    /* Cyan for NIV */
 
   --accent: #3b82f6;
   --radius: 12px;
   --header-h: 60px;
-  --sidebar-w: 260px;
+  --sidebar-w: 280px;
 }
 
 [data-theme="dark"]{
   --bg: #0f172a; --card: #1e293b; --text: #f1f5f9; --text-light: #94a3b8;
   --border: #334155;
   --sev-critical: #f87171; --sev-severe: #fb923c; --sev-mod: #facc15; --sev-mild: #4ade80;
+  --spec-smart: #a78bfa; --spec-rescue: #94a3b8; --spec-niv: #22d3ee;
   --accent: #60a5fa;
 }
 
@@ -39,44 +45,47 @@ body{font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Micros
   height:var(--header-h); background:var(--card); border-bottom:1px solid var(--border);
   display:flex; align-items:center; padding:0 16px; position:fixed; top:0; width:100%; z-index:50;
 }
-.app-title{font-weight:800; font-size:18px; display:flex; align-items:center; gap:8px;}
-.severity-badge{font-size:10px; padding:2px 6px; border-radius:4px; background:#eee; color:#666; font-weight:normal;}
+.app-title{font-weight:800; font-size:18px;}
+.badge{font-size:10px; padding:2px 6px; border-radius:4px; background:#eee; color:#666; font-weight:normal; margin-left:8px;}
 
 .container{display:flex; height:calc(100vh - var(--header-h)); margin-top:var(--header-h);}
 
 /* Sidebar */
 .sidebar{
   width:var(--sidebar-w); background:var(--card); border-right:1px solid var(--border);
-  overflow-y:auto; flex-shrink:0; display:flex; flex-direction:column;
+  overflow-y:auto; flex-shrink:0; display:flex; flex-direction:column; padding-bottom:40px;
 }
-.nav-group-title{
-  padding:16px 16px 8px; font-size:12px; font-weight:700; color:var(--text-light); text-transform:uppercase; letter-spacing:0.5px;
+.nav-section-title{
+  padding:20px 16px 8px; font-size:11px; font-weight:800; color:var(--text-light); 
+  text-transform:uppercase; letter-spacing:1px; border-bottom:1px dashed var(--border);
+  background: var(--bg);
 }
 .nav-item{
-  padding:14px 16px; border-bottom:1px solid var(--border); cursor:pointer;
+  padding:12px 16px; border-bottom:1px solid var(--border); cursor:pointer;
   display:flex; align-items:center; justify-content:space-between; transition:0.2s;
 }
 .nav-item:hover{background:var(--bg);}
 .nav-item.active{background:var(--bg); border-left:4px solid var(--accent);}
-.nav-title{font-weight:700; font-size:16px;}
-.nav-desc{font-size:12px; color:var(--text-light);}
-.dot{width:10px; height:10px; border-radius:50%;}
+.nav-main{display:flex; flex-direction:column;}
+.nav-code{font-weight:700; font-size:15px;}
+.nav-sub{font-size:11px; color:var(--text-light); margin-top:2px;}
+.dot{width:8px; height:8px; border-radius:50%;}
 
 /* Main Content */
 .main{flex:1; overflow-y:auto; padding:24px; scroll-behavior:smooth;}
 
-/* Cards */
+/* Mode Detail Styles */
 .mode-header{margin-bottom:24px;}
-.mode-title{font-size:28px; font-weight:800; margin:0 0 8px 0; color:var(--text);}
-.mode-meta{display:flex; gap:12px; font-size:14px; color:var(--text-light);}
+.mode-big-title{font-size:26px; font-weight:800; margin:0 0 8px 0; color:var(--text);}
+.mode-tags{display:flex; gap:8px; flex-wrap:wrap;}
+.tag{font-size:12px; padding:4px 8px; border-radius:4px; background:var(--bg); color:var(--text-light); border:1px solid var(--border);}
 
 .waveform-box{
   background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
-  height:200px; padding:20px; margin-bottom:24px; position:relative;
+  height:180px; padding:20px; margin-bottom:24px; position:relative;
   display:flex; align-items:center; justify-content:center;
 }
 .waveform-box svg{width:100%; height:100%;}
-.waveform-label{position:absolute; bottom:10px; right:12px; font-size:11px; opacity:0.5;}
 
 .grid-2{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;}
 .card{background:var(--card); padding:20px; border-radius:var(--radius); border:1px solid var(--border);}
@@ -85,287 +94,249 @@ body{font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Micros
   text-transform:uppercase; letter-spacing:0.5px;
 }
 
-/* Color Accents */
-.c-red .card-title{color:var(--sev-critical);} .c-red{border-top:3px solid var(--sev-critical);}
-.c-orange .card-title{color:var(--sev-severe);} .c-orange{border-top:3px solid var(--sev-severe);}
-.c-yellow .card-title{color:var(--sev-mod);} .c-yellow{border-top:3px solid var(--sev-mod);}
-.c-green .card-title{color:var(--sev-mild);} .c-green{border-top:3px solid var(--sev-mild);}
-.c-blue .card-title{color:var(--accent);}
+/* Specific Card Themes */
+.c-mech .card-title{color:var(--accent);}
+.c-pt .card-title{color:#eab308;} /* Yellow for PT view */
+.c-ind .card-title{color:#22c55e;} 
+.c-risk .card-title{color:#ef4444;}
+.c-risk{border-top:3px solid #ef4444;}
 
-/* List & Content */
 ul{margin:0; padding-left:18px;} li{margin-bottom:6px; line-height:1.5; font-size:15px;}
-.data-table{width:100%; border-collapse:collapse; font-size:14px;}
-.data-table td{padding:6px 0; border-bottom:1px dashed var(--border);}
-.data-table td:first-child{color:var(--text-light); width:40%;}
-.data-table td:last-child{font-weight:600;}
 
 /* Mobile */
-.menu-toggle{display:none; padding:10px; cursor:pointer;}
+.menu-toggle{display:none; padding:10px; cursor:pointer; margin-right:10px;}
 @media(max-width:768px){
-  .sidebar{position:fixed; top:var(--header-h); bottom:0; left:-100%; z-index:40; transition:0.3s; width:80%; box-shadow:4px 0 20px rgba(0,0,0,0.1);}
+  .sidebar{position:fixed; top:var(--header-h); bottom:0; left:-100%; z-index:40; transition:0.3s; width:85%; box-shadow:4px 0 20px rgba(0,0,0,0.1);}
   .sidebar.open{left:0;}
   .menu-toggle{display:block;}
   .grid-2{grid-template-columns:1fr;}
 }
-
 </style>
 </head>
 <body>
 
 <div class="header">
   <div class="menu-toggle" onclick="toggleMenu()">☰</div>
-  <div class="app-title">
-    呼吸器模式速查 <span class="severity-badge">PT Pro Edition</span>
-  </div>
+  <div class="app-title">呼吸器模式速查 <span class="badge">PT Clinical Guide</span></div>
 </div>
 
 <div class="container">
   <div class="sidebar" id="sidebar">
-    <div class="nav-group-title">依病情嚴重度排序 (Severity)</div>
-    <div id="navList"></div>
+    <!-- List Injected via JS -->
   </div>
 
   <div class="main" id="mainContent">
-    <!-- Content injected via JS -->
+    <!-- Detail Injected via JS -->
   </div>
 </div>
 
 <script>
-// --- Data Structure (Sorted by Severity) ---
-const modes = [
+// --- 1. Standard Modes (Severity Sorted) ---
+const stdModes = [
   {
-    id: 'cmv',
-    code: 'CMV / VCV',
-    name: 'Continuous Mandatory Ventilation',
-    severity: 'critical',
-    severityText: '極重度 / 無自主呼吸',
-    desc: '機器全控制。病人沒有出力，機器給予固定潮氣量與頻率。',
-    content: {
-      mechanism: '<b>控制位置：機器 (Machine)</b><br>不管病人想不想吸氣，機器都會依照設定的時間 (Time Trigger)，強制打入設定的容積 (Volume) 或壓力 (Pressure)。',
-      pt_view: '病人完全被動 (Passive)。此時呼吸肌完全不收縮，長期使用會導致<b>橫膈膜萎縮 (Diaphragm Atrophy)</b>。',
-      indication: '<ul><li>全麻手術中。</li><li>嚴重腦傷、呼吸中樞受損。</li><li>使用肌肉鬆弛劑 (Paralyzed) 或重度鎮靜時。</li></ul>',
-      contraindication: '<ul><li>病人有清楚意識且有自主呼吸能力 (會造成嚴重的人機對抗 fighting)。</li></ul>',
-      complication: '<ul><li><b>呼吸肌無力</b>：因長期廢用。</li><li><b>Barotrauma (氣壓傷)</b>：若 lung compliance 變差，硬打固定容積會導致高壓。</li><li>心輸出量下降 (高胸內壓影響靜脈回流)。</li></ul>',
-      pt_action: '<ul><li><b>介入重點</b>：擺位 (Positioning)、姿位引流、被動關節活動 (PROM)。</li><li><b>禁忌</b>：不可進行呼吸肌訓練 (IMT)，因為病人無法出力。</li><li><b>注意</b>：翻身或抽痰時易誘發咳嗽，觀察高壓警報 (High Pressure Alarm)。</li></ul>',
-      data: {
-        'Control Variable': 'Volume or Pressure',
-        'Trigger': 'Time (機器定時)',
-        'Cycle': 'Time/Volume',
-        'WOB (Work of Breathing)': '機器 100% / 病人 0%'
-      }
-    }
+    id: 'cmv', code: 'CMV / VCV', name: 'Continuous Mandatory Vent.', severity: 'critical',
+    desc: '全控制模式。病人無出力，機器主導一切。',
+    mech: '機器依設定時間 (Time Trigger) 強制給予固定容積或壓力。病人完全被動。',
+    pt: '病人呼吸肌完全不收縮 (Passive)，長期會導致<b>橫膈膜萎縮</b>。只能做 PROM 與擺位。',
+    ind: '<ul><li>全麻、嚴重腦傷。</li><li>使用肌肉鬆弛劑 (NMBAs)。</li></ul>',
+    risk: '<ul><li>呼吸肌無力。</li><li>Barotrauma (氣壓傷)。</li><li>人機對抗 (若病人醒來)。</li></ul>'
   },
   {
-    id: 'ac',
-    code: 'A/C',
-    name: 'Assist / Control',
-    severity: 'severe',
-    severityText: '重度 / 微弱自主呼吸',
-    desc: '輔助控制模式。病人吸氣會觸發機器給「全餐」，不吸氣機器會給「保底」。',
-    content: {
-      mechanism: '<b>控制位置：混合 (Patient Trigger + Machine Cycle)</b><br>1. <b>Assist</b>: 病人吸氣微弱 (Trigger) → 機器偵測到 → 給予設定好的「完整」容積/壓力。<br>2. <b>Control</b>: 病人太久沒吸氣 → 機器依設定頻率強制給氣。',
-      pt_view: '最常用的 ICU 模式。雖然病人可以決定「什麼時候吸 (Rate)」，但「吸多深 (Volume)」還是機器決定的。病人可能會有過度換氣 (Hyperventilation) 的風險。',
-      indication: '<ul><li>呼吸衰竭但仍有微弱呼吸驅動力 (Drive)。</li><li>呼吸肌疲勞，需要機器分擔大部分做功 (WOB)。</li></ul>',
-      contraindication: '<ul><li>病人極度焦慮或喘 (會一直觸發機器，導致呼吸性鹼中毒)。</li></ul>',
-      complication: '<ul><li><b>Auto-PEEP</b>：若病人呼吸次數過快 (Tachypnea)，氣體來不及呼出。</li><li>呼吸性鹼中毒 (Respiratory Alkalosis)。</li><li>廢用性萎縮 (雖然比 CMV 好一點)。</li></ul>',
-      pt_action: '<ul><li><b>介入重點</b>：早期活動 (Early Mobilization)。</li><li><b>注意</b>：若運動中病人呼吸急促，機器會一直給氣，需觀察有無 Auto-PEEP (吐氣受阻)。</li><li><b>Double Triggering</b>：若病人吸氣需求大於機器給的，會出現連吸兩口，需請 RT 調整。</li></ul>',
-      data: {
-        'Trigger': 'Pressure or Flow (病人觸發)',
-        'Backup Rate': '有 (例如 12-14 bpm)',
-        'Tidal Volume': '固定 (例如 450-500ml)',
-        'WOB': '機器 80-90% / 病人 10-20%'
-      }
-    }
+    id: 'ac', code: 'A/C', name: 'Assist / Control', severity: 'severe',
+    desc: '輔助控制。病人吸氣機器給全餐，不吸氣機器給保底。',
+    mech: '病人吸氣觸發 (Assist) 則給完整設定量；若無觸發則依備援頻率給氣 (Control)。',
+    pt: '最常見。病人可決定次數，但不能決定容積。運動時若病人喘，容易導致<b>過度換氣 (Hyperventilation)</b> 與 Auto-PEEP。',
+    ind: '<ul><li>呼吸衰竭但有微弱驅動力。</li><li>呼吸肌疲勞需休息。</li></ul>',
+    risk: '<ul><li>呼吸性鹼中毒。</li><li>Auto-PEEP (氣體滯留)。</li><li>Double Triggering。</li></ul>'
   },
   {
-    id: 'simv',
-    code: 'SIMV + PS',
-    name: 'Sync. Intermittent Mandatory Ventilation',
-    severity: 'mod',
-    severityText: '中度 / 準備脫離',
-    desc: '同步間歇指令。機器給固定的幾口氣，剩下的時間病人自己吸 (通常搭配 PS)。',
-    content: {
-      mechanism: '<b>控制位置：機器與病人共存</b><br>機器設定每分鐘給幾次「強制換氣」(Mandatory)，在這些強制換氣的「空檔」，允許病人進行「自主呼吸」(Spontaneous)，且通常會加上壓力支持 (Pressure Support) 來幫忙推一下。',
-      pt_view: '這是一個<b>訓練模式</b>。病人的橫膈膜開始要負擔較多的做功。這是 PT 介入呼吸訓練的好時機。',
-      indication: '<ul><li>Weaning (脫離呼吸器) 過渡期。</li><li>需鍛鍊呼吸肌力量。</li><li>預防呼吸肌萎縮。</li></ul>',
-      contraindication: '<ul><li>病情不穩、呼吸肌極度疲乏者 (會導致衰竭)。</li></ul>',
-      complication: '<ul><li><b>呼吸肌疲勞 (Muscle Fatigue)</b>：若參數設太低，病人太累。</li><li>人機不同步 (Asynchrony)。</li></ul>',
-      pt_action: '<ul><li><b>介入重點</b>：主動呼吸循環技術 (ACBT)、肌力訓練、功能性活動。</li><li><b>監測</b>：運動時密切注意 RR 與 SpO2。若出現<b>反鎖式呼吸 (Paradoxical breathing)</b> 或用盡輔助肌，代表病人過度疲勞，應暫停訓練。</li></ul>',
-      data: {
-        'Mandatory Breath': '機器控制 (例如 6-8 bpm)',
-        'Spontaneous Breath': '病人控制 (決定大小與快慢)',
-        'Pressure Support': '通常設定 10-15 cmH2O',
-        'WOB': '機器 40-60% / 病人 40-60%'
-      }
-    }
+    id: 'simv', code: 'SIMV', name: 'Sync. Intermittent Mandatory', severity: 'mod',
+    desc: '同步間歇。機器給幾口固定的，空檔讓病人自己吸。',
+    mech: '機器強制通氣 + 允許病人在空檔進行自主呼吸 (Spontaneous)。',
+    pt: '<b>訓練模式</b>。病人需負擔部分做功。PT 介入的好時機，可進行肌力訓練，但需監測是否疲勞 (使用輔助肌)。',
+    ind: '<ul><li>Weaning 過渡期。</li><li>預防呼吸肌萎縮。</li></ul>',
+    risk: '<ul><li>呼吸肌疲勞 (Muscle Fatigue)。</li><li>人機不同步。</li></ul>'
   },
   {
-    id: 'cpap',
-    code: 'CPAP / PSV',
-    name: 'Spontaneous / Pressure Support',
-    severity: 'mild',
-    severityText: '輕度 / 自主呼吸',
-    desc: '自主呼吸模式。病人決定怎麼吸、吸多少，機器只給予壓力支持與 PEEP。',
-    content: {
-      mechanism: '<b>控制位置：病人 (Patient)</b><br>1. <b>CPAP</b>: 持續給予正壓撐開肺泡 (增加 FRC)。<br>2. <b>PSV</b>: 吸氣時給予壓力輔助 (克服管路阻力)。<br>病人全權負責呼吸頻率 (RR) 與潮氣量 (TV)。',
-      pt_view: '這是拔管前的最後一哩路 (SBT, Spontaneous Breathing Trial)。病人的呼吸肌正在全負荷運轉。若能在些模式下運動且數值穩定，拔管成功率高。',
-      indication: '<ul><li>拔管前評估 (Weaning trial)。</li><li>阻塞性睡眠呼吸中止症 (OSA)。</li><li>輕度氧合問題。</li></ul>',
-      contraindication: '<ul><li>呼吸中樞驅動力不穩 (Apnea)。</li><li>意識不清、無法保護呼吸道。</li></ul>',
-      complication: '<ul><li><b>呼吸暫停 (Apnea)</b>：機器通常會有備援模式 (Apnea Ventilation)。</li><li>低通氣 (Hypoventilation) 導致高二氧化碳。</li></ul>',
-      pt_action: '<ul><li><b>介入重點</b>：高強度功能訓練、耐力訓練、咳嗽訓練。</li><li><b>注意</b>：此模式下運動，病人最容易喘。若 RR > 30-35 或 SpO2 < 90% 需立即休息。</li></ul>',
-      data: {
-        'Rate': '病人決定',
-        'Tidal Volume': '病人決定',
-        'PEEP': '通常 5-8 cmH2O',
-        'WOB': '機器 0-10% / 病人 90-100%'
-      }
-    }
+    id: 'cpap', code: 'CPAP / PSV', name: 'Spontaneous', severity: 'mild',
+    desc: '自主呼吸。病人決定一切，機器只給壓力支持。',
+    mech: '病人決定頻率與容積。機器提供 PEEP (撐開肺泡) 與 PS (克服阻力)。',
+    pt: '<b>拔管前最後一哩路 (SBT)</b>。運動強度可拉高，但病人最容易喘，需密切監測 RR 與 SpO2。',
+    ind: '<ul><li>拔管前評估。</li><li>OSA 睡眠呼吸中止。</li></ul>',
+    risk: '<ul><li>呼吸暫停 (Apnea)。</li><li>低通氣 (Hypoventilation)。</li></ul>'
   }
 ];
 
-// --- SVG Waveform Generators ---
-function getWaveform(type, color) {
-  let path = '';
-  // Generic Logic for Waveforms (Pressure vs Time)
-  if(type === 'cmv') {
-    // Square waves, identical, regular
-    path = `M0 100 L10 100 L10 40 L60 40 L60 100 L110 100 L110 40 L160 40 L160 100 L210 100 L210 40 L260 40 L260 100 L300 100`;
-  } else if(type === 'ac') {
-    // Similar to CMV but with small dip before rise (Patient trigger)
-    path = `M0 100 L20 100 Q25 110 30 100 L30 40 L80 40 L80 100 L120 100 Q125 110 130 100 L130 40 L180 40 L180 100 L300 100`;
-  } else if(type === 'simv') {
-    // Big breath (Machine) ... small breath (Patient) ... Big breath
-    path = `M0 100 L10 100 L10 40 L60 40 L60 100 L80 100 Q85 105 90 90 L100 80 L110 90 L120 100 L150 100 L150 40 L200 40 L200 100 L230 100 Q235 105 240 90 L250 80 L260 90 L270 100 L300 100`;
-  } else if(type === 'cpap') {
-    // Baseline elevated (PEEP), irregular sine waves (Patient)
-    path = `M0 80 Q20 60 40 80 T80 80 T120 80 T160 80 T200 80 T240 80 T280 80`; // Simplified sine
+// --- 2. Advanced / Special Modes ---
+const advModes = [
+  {
+    id: 'prvc', code: 'PRVC', name: 'Pressure Regulated Volume Control', color: 'smart',
+    tag: 'Dual Control (雙重控制)',
+    desc: '聰明的 A/C。保證容積，但用最低壓力來達成。',
+    mech: '<b>A/C 的升級版</b>。機器會試探肺部順應性，自動調整流速與吸氣壓力，以「最低壓力」達到「目標潮氣量」。',
+    pt: '<b>PT 的好朋友</b>。現代 ICU 的主流。當病人運動需求增加時，流速會自動配合，病人會覺得比傳統 VCV 舒服，較少發生 Fighting。',
+    ind: '<ul><li>肺順應性變動大的病人。</li><li>需保證潮氣量但怕氣壓傷時。</li></ul>',
+    risk: '<ul><li>若病人咳痰或咬管，機器會誤判壓力而給氣不足。</li></ul>'
+  },
+  {
+    id: 'pav', code: 'PAV+ / NAVA', name: 'Proportional Assist / Neurally Adjusted', color: 'smart',
+    tag: 'Smart Synchrony (智慧同步)',
+    desc: '極致同步。你出多少力，機器就按比例幫多少。',
+    mech: '<b>PAV+</b>: 依據氣流/容積需求成比例輔助。<br><b>NAVA</b>: 透過鼻胃管偵測「橫膈膜電位 (Edi)」來觸發，大腦一想吸氣機器就給。',
+    pt: '<b>高階訓練神器</b>。極符合生理需求。病人運動越喘機器給越多。注意 NAVA 鼻胃管位置，<b>劇烈活動/坐起可能導致管路滑動失效</b>。',
+    ind: '<ul><li>困難脫離呼吸器者。</li><li>極度要求人機同步時。</li></ul>',
+    risk: '<ul><li>管路滑脫 (NAVA)。</li><li>呼吸驅動力不穩者不適用。</li></ul>'
+  },
+  {
+    id: 'aprv', code: 'APRV', name: 'Airway Pressure Release Vent.', color: 'rescue',
+    tag: 'Rescue / Inverse Ratio (救援模式)',
+    desc: '反比呼吸。像是在高壓下憋氣，偶爾吐一口氣。',
+    mech: '給予長時間的高壓 (P-High) 撐開肺泡，極短時間放氣 (Release) 排 CO2。雖然允許自主呼吸，但壓力很高。',
+    pt: '<b>高度警覺</b>。通常用於嚴重 ARDS。病人看起來像在憋氣。<b>PT 介入需非常謹慎</b>，大幅度翻身或抽痰可能導致肺泡塌陷 (De-recruitment)，血氧驟降。',
+    ind: '<ul><li>嚴重 ARDS (Refractory hypoxemia)。</li><li>肺塌陷需 Open Lung。</li></ul>',
+    risk: '<ul><li>氣胸 (Pneumothorax)。</li><li>血流動力學不穩。</li></ul>'
+  },
+  {
+    id: 'bipap', code: 'BiPAP / NIV', name: 'Non-Invasive Ventilation', color: 'niv',
+    tag: 'Non-Invasive (非侵襲性)',
+    desc: '面罩通氣。不插管，戴面罩打氣。',
+    mech: '使用面罩給予雙氏壓力：吸氣高壓 (IPAP) + 吐氣低壓 (EPAP)。',
+    pt: '<b>介面問題</b>。病人戴面罩溝通困難、易有幽閉恐懼。運動時若面罩漏氣機器會警報。若病人嘔吐有<b>吸入性肺炎</b>風險。',
+    ind: '<ul><li>COPD 急性發作。</li><li>拔管後預防性使用。</li><li>DNR 不插管病人。</li></ul>',
+    risk: '<ul><li>吸入性肺炎 (Aspiration)。</li><li>面罩壓瘡。</li><li>腹脹 (吞氣)。</li></ul>'
   }
-
-  return `
-    <svg viewBox="0 0 300 150" preserveAspectRatio="none">
-      <!-- Grid -->
-      <path d="M0 130 L300 130" stroke="#eee" stroke-width="2"/>
-      <path d="M0 20 L300 20" stroke="#eee" stroke-width="2" stroke-dasharray="4"/>
-      <text x="5" y="15" font-size="10" fill="#999">Pressure (cmH2O)</text>
-      
-      <!-- Waveform -->
-      <path d="${path}" fill="none" stroke="${color}" stroke-width="3" stroke-linejoin="round" />
-      
-      <!-- Labels based on type -->
-      ${type==='ac' ? '<text x="25" y="125" font-size="10" fill="#666">Trigger</text>' : ''}
-      ${type==='simv' ? '<text x="20" y="30" font-size="10" fill="#666">Mandatory</text><text x="90" y="70" font-size="10" fill="#666">Spont.</text>' : ''}
-      ${type==='cpap' ? '<text x="10" y="70" font-size="10" fill="#666">PEEP Level</text>' : ''}
-    </svg>
-  `;
-}
+];
 
 // --- Render Logic ---
-const navList = document.getElementById('navList');
+const sidebar = document.getElementById('sidebar');
 const mainContent = document.getElementById('mainContent');
 
 function renderNav() {
-  navList.innerHTML = modes.map(m => `
+  let html = `<div class="nav-section-title">基礎模式 (Standard)</div>`;
+  
+  stdModes.forEach(m => {
+    html += createNavItem(m, `var(--sev-${m.severity})`);
+  });
+
+  html += `<div class="nav-section-title" style="margin-top:10px;">進階與特殊 (Extended)</div>`;
+  
+  advModes.forEach(m => {
+    html += createNavItem(m, `var(--spec-${m.color})`);
+  });
+
+  sidebar.innerHTML = html;
+}
+
+function createNavItem(m, colorVar) {
+  return `
     <div class="nav-item" onclick="renderMode('${m.id}')" id="nav-${m.id}">
-      <div>
-        <div class="nav-title" style="color:var(--sev-${m.severity})">${m.code}</div>
-        <div class="nav-desc">${m.severityText}</div>
+      <div class="nav-main">
+        <div class="nav-code" style="color:${colorVar}">${m.code}</div>
+        <div class="nav-sub">${m.name}</div>
       </div>
-      <div class="dot" style="background:var(--sev-${m.severity})"></div>
+      <div class="dot" style="background:${colorVar}"></div>
     </div>
-  `).join('');
+  `;
 }
 
 function renderMode(id) {
-  // Active state
+  // Find mode in either array
+  let m = stdModes.find(x => x.id === id);
+  let type = 'std';
+  if(!m) {
+    m = advModes.find(x => x.id === id);
+    type = 'adv';
+  }
+
+  // Active State
   document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
   document.getElementById(`nav-${id}`).classList.add('active');
 
-  const m = modes.find(x => x.id === id);
-  const colorVar = `var(--sev-${m.severity})`;
-  
-  // Color Class mapping
-  let colorClass = 'c-blue';
-  if(m.severity === 'critical') colorClass = 'c-red';
-  if(m.severity === 'severe') colorClass = 'c-orange';
-  if(m.severity === 'mod') colorClass = 'c-yellow';
-  if(m.severity === 'mild') colorClass = 'c-green';
+  // Determine Color
+  let colorVar = '';
+  if(type === 'std') colorVar = `var(--sev-${m.severity})`;
+  else colorVar = `var(--spec-${m.color})`;
 
+  // Render Content
   mainContent.innerHTML = `
     <div class="mode-header">
-      <div class="mode-title" style="color:${colorVar}">${m.code}</div>
-      <div class="mode-meta">
-        <span>${m.name}</span>
-        <span>•</span>
-        <span style="font-weight:700; color:${colorVar}">${m.severityText}</span>
+      <div class="mode-big-title" style="color:${colorVar}">${m.code}</div>
+      <div class="mode-tags">
+        <span class="tag" style="border-color:${colorVar}; color:${colorVar}">${m.name}</span>
+        ${m.tag ? `<span class="tag" style="background:#f1f5f9; color:#64748b">${m.tag}</span>` : ''}
       </div>
-      <p style="margin-top:12px; line-height:1.6;">${m.desc}</p>
+      <p style="margin-top:16px; line-height:1.6; font-size:16px; color:var(--text);">${m.desc}</p>
     </div>
 
     <div class="waveform-box">
       ${getWaveform(m.id, colorVar)}
-      <div class="waveform-label">Pressure-Time Waveform</div>
     </div>
 
     <div class="grid-2">
-      <div class="card c-blue">
+      <div class="card c-mech">
         <div class="card-title">⚙ 作用機轉 (Mechanism)</div>
-        <div class="content">${m.content.mechanism}</div>
+        <div style="font-size:15px; line-height:1.6;">${m.mech}</div>
       </div>
-      <div class="card ${colorClass}">
-        <div class="card-title">🏃 物理治療觀點 (PT View)</div>
-        <div class="content">${m.content.pt_view}</div>
+      <div class="card c-pt">
+        <div class="card-title">🏃 PT 觀點 (Physio View)</div>
+        <div style="font-size:15px; line-height:1.6;">${m.pt}</div>
       </div>
     </div>
 
     <div class="grid-2">
-      <div class="card c-green">
+      <div class="card c-ind">
         <div class="card-title">✅ 適應症 (Indications)</div>
-        <ul>${m.content.indication}</ul>
+        ${m.ind}
       </div>
-      <div class="card c-red">
-        <div class="card-title">⛔ 禁忌與併發症 (Risks)</div>
-        ${m.content.contraindication}
-        <hr style="border:0; border-top:1px dashed #eee; margin:10px 0;">
-        ${m.content.complication}
-      </div>
-    </div>
-
-    <div class="card c-yellow" style="margin-bottom:24px;">
-      <div class="card-title">🛡 治療介入須知 (PT Action)</div>
-      ${m.content.pt_action}
-    </div>
-
-    <div class="card">
-      <div class="card-title" style="color:#64748b">📊 詳細數據 (Parameters)</div>
-      <table class="data-table">
-        ${Object.entries(m.content.data).map(([k,v]) => `<tr><td>${k}</td><td>${v}</td></tr>`).join('')}
-      </table>
-    </div>
-
-    <div style="margin-top:30px; border-top:1px solid #eee; padding-top:20px;">
-      <div class="card-title" style="color:#64748b; margin-bottom:10px;">📖 延伸閱讀 (Extended Reading)</div>
-      <div style="font-size:14px; color:#666; line-height:1.6;">
-        <p><b>肺順應性 (Compliance):</b> 代表肺部擴張的難易度。C = ΔV / ΔP。纖維化或ARDS會導致順應性下降 (Stiff lung)，此時需較高壓力才能達到目標容積。</p>
-        <p><b>氣道阻力 (Resistance):</b> 氣體流動的阻力。痰液阻塞、支氣管痙攣會導致阻力上升 (High PIP, Normal Plateau)。</p>
-        <p><b>Auto-PEEP:</b> 氣體滯留。常見於 COPD 或呼吸頻率過快時。PT 運動時若發現病人吐氣時間過短，應暫停並評估是否調整活動強度。</p>
+      <div class="card c-risk">
+        <div class="card-title">⛔ 風險與禁忌 (Risks)</div>
+        ${m.risk}
       </div>
     </div>
   `;
 
-  // Scroll to top
   mainContent.scrollTop = 0;
-  // Close mobile menu
   if(window.innerWidth <= 768) document.getElementById('sidebar').classList.remove('open');
 }
 
-// Mobile Menu
-function toggleMenu(){
-  document.getElementById('sidebar').classList.toggle('open');
+// --- Waveform Generator (Simplified for PT) ---
+function getWaveform(id, color) {
+  let path = '';
+  let label = 'Pressure-Time Waveform';
+  
+  if(id === 'cmv') { // Square waves
+    path = `M0 100 L10 100 L10 40 L60 40 L60 100 L110 100 L110 40 L160 40 L160 100 L210 100 L210 40 L260 40 L260 100 L300 100`;
+  } else if(id === 'ac' || id === 'prvc') { // Assist notch (AC) or Decelerating (PRVC looks similar in pressure target concept)
+    path = `M0 100 L20 100 Q25 110 30 100 L30 40 L80 40 L80 100 L120 100 Q125 110 130 100 L130 40 L180 40 L180 100 L300 100`;
+    label = id === 'prvc' ? 'PRVC (Auto-Regulated Pressure)' : 'A/C (Patient Trigger)';
+  } else if(id === 'simv') { // Mixed
+    path = `M0 100 L10 100 L10 40 L60 40 L60 100 L80 100 Q85 105 90 90 L100 80 L110 90 L120 100 L150 100 L150 40 L200 40 L200 100`;
+    label = 'Mandatory + Spontaneous Breath';
+  } else if(id === 'cpap' || id === 'bipap' || id === 'pav') { // Spontaneous
+    path = `M0 80 Q20 60 40 80 T80 80 T120 80 T160 80 T200 80 T240 80`;
+    label = id === 'bipap' ? 'BiPAP (IPAP/EPAP)' : 'Spontaneous Breathing';
+  } else if(id === 'aprv') { // Inverse ratio (Long high, short low)
+    path = `M0 40 L200 40 L200 100 L220 100 L220 40 L300 40`; 
+    label = 'APRV (Long High P, Short Release)';
+  }
+
+  return `
+    <svg viewBox="0 0 300 150" preserveAspectRatio="none">
+      <path d="M0 130 L300 130" stroke="#eee" stroke-width="2"/>
+      <path d="M0 20 L300 20" stroke="#eee" stroke-width="2" stroke-dasharray="4"/>
+      <text x="5" y="15" font-size="10" fill="#999">Pressure (cmH2O)</text>
+      <path d="${path}" fill="none" stroke="${color}" stroke-width="3" stroke-linejoin="round" />
+      <text x="10" y="145" font-size="10" fill="#999">${label}</text>
+    </svg>
+  `;
 }
+
+// Mobile Toggle
+function toggleMenu(){ document.getElementById('sidebar').classList.toggle('open'); }
 
 // Init
 renderNav();
-renderMode('cmv'); // Default to most severe
+renderMode('cmv'); 
 
 </script>
 </body>
